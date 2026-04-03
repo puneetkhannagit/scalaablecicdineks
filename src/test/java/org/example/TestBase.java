@@ -160,7 +160,7 @@ public class TestBase {
         WebDriver wd = new ChromeDriver(service, options);
         wd.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         wd.manage().window().setSize(new org.openqa.selenium.Dimension(1920, 1080));
-        driver.set(wd);
+        DRIVER.set(wd);
     }
 
     protected void setupRemote() throws MalformedURLException {
