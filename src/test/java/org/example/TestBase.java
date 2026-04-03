@@ -5,6 +5,7 @@ import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testng.annotations.AfterMethod;
@@ -17,6 +18,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class TestBase {
@@ -126,15 +129,38 @@ public class TestBase {
     }
 
     protected void setupLocal() {
-        // Use WebDriverManager to setup ChromeDriver
-        WebDriverManager.chromedriver().setup();
+        boolean headless = Boolean.parseBoolean(System.getProperty("headless", "false"));
+
         ChromeOptions options = new ChromeOptions();
-        if (headless()) {
-            options.addArguments("--headless=new");
-            options.addArguments("--disable-gpu");
-            options.addArguments("--window-size=1920,1080");
+        List<String> args = new ArrayList<>();
+        // CI-friendly arguments
+        args.add("--no-sandbox");
+        args.add("--disable-dev-shm-usage");
+        args.add("--disable-gpu");
+        args.add("--window-size=1920,1080");
+        // allow recent chromedriver/chrome cross-origin init issues
+        args.add("--remote-allow-origins=*");
+
+        if (headless) {
+            // use new headless mode when available; fallback to legacy if needed
+            args.add("--headless=new");
         }
-        DRIVER.set(new ChromeDriver(options));
+
+        options.addArguments(args);
+
+        // Ensure chromedriver binary matches installed chrome
+        WebDriverManager.chromedriver().setup();
+
+        // Enable verbose chromedriver logs for diagnostics in CI
+        ChromeDriverService service = new ChromeDriverService.Builder()
+                .withVerbose(true)
+                .withLogFile(new File("target/chromedriver.log"))
+                .build();
+
+        WebDriver wd = new ChromeDriver(service, options);
+        wd.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        wd.manage().window().setSize(new org.openqa.selenium.Dimension(1920, 1080));
+        driver.set(wd);
     }
 
     protected void setupRemote() throws MalformedURLException {
