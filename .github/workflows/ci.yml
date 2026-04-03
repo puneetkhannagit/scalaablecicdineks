@@ -1,0 +1,57 @@
+name: CI - Maven Tests
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Environment to run tests against (local/staging/prod)'
+        required: true
+        default: 'local'
+      groups:
+        description: 'TestNG groups to run (comma-separated)'
+        required: false
+        default: 'smoke'
+      tag:
+        description: 'Optional tag for this run (for reporting)'
+        required: false
+        default: ''
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Run tests
+        env:
+          # Respect the workflow_dispatch input and default to 'local'
+          ENV: ${{ github.event.inputs.env || github.event.pull_request && github.event.pull_request.base.ref || 'local' }}
+        run: |
+          echo "Running tests for env=${{ github.event.inputs.env }} groups=${{ github.event.inputs.groups }} tag=${{ github.event.inputs.tag }}"
+          mvn -B -Denv=${{ github.event.inputs.env }} -Dgroups=${{ github.event.inputs.groups }} test
+
+      - name: Upload test-results (surefire)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports || target/failsafe-reports
