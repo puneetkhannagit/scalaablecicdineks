@@ -23,6 +23,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    env:
+      ENV: ${{ github.event.inputs.env || 'local' }}
+      GROUPS: ${{ github.event.inputs.groups || 'smoke' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,7 +37,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Cache Maven local repository
+      - name: Cache Maven
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
@@ -41,17 +45,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      - name: Run tests
-        env:
-          # Respect the workflow_dispatch input and default to 'local'
-          ENV: ${{ github.event.inputs.env || github.event.pull_request && github.event.pull_request.base.ref || 'local' }}
+      # ✅ IMPORTANT: install Chrome (fix for CI)
+      - name: Install Chrome
         run: |
-          echo "Running tests for env=${{ github.event.inputs.env }} groups=${{ github.event.inputs.groups }} tag=${{ github.event.inputs.tag }}"
-          mvn -B -Denv=${{ github.event.inputs.env }} -Dgroups=${{ github.event.inputs.groups }} test
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
 
-      - name: Upload test-results (surefire)
+      - name: Run tests
+        run: |
+          echo "Running tests for env=$ENV groups=$GROUPS"
+          
+          mvn -B \
+            -Denv=$ENV \
+            -Dgroups=$GROUPS \
+            -Dheadless=true \
+            -DrunMode=local \
+            test
+
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports
-          path: target/surefire-reports || target/failsafe-reports
+          path: |
+            target/surefire-reports
+            target/failsafe-reports
