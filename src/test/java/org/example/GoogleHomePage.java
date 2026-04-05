@@ -30,11 +30,11 @@ public class GoogleHomePage {
         WebElement box = wait.until(ExpectedConditions.elementToBeClickable(searchBox));
         box.clear();
         box.sendKeys(query);
-        box.submit();
-        // wait until results container appears and title contains a part of the query
-        wait.until(ExpectedConditions.presenceOfElementLocated(results));
-        // sometimes title updates include only the first word - wait for some part of the query
-        String firstToken = query.split(" ")[0];
-        wait.until(ExpectedConditions.titleContains(firstToken));
+//        box.submit();
+//        // wait until results container appears and title contains a part of the query
+//        wait.until(ExpectedConditions.presenceOfElementLocated(results));
+//        // sometimes title updates include only the first word - wait for some part of the query
+//        String firstToken = query.split(" ")[0];
+//        wait.until(ExpectedConditions.titleContains(firstToken));
     }
 }

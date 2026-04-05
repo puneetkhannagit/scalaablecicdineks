@@ -113,7 +113,7 @@ public class TestBase {
     }
 
     protected String gridUrl() {
-        return getConfig("gridUrl", "http://localhost:4444/wd/hub");
+        return getConfig("gridUrl", "http://http://a233e0f836af14c40aff6155213ca606-1943667995.eu-north-1.elb.amazonaws.com:4444/wd/hub");
     }
 
     @BeforeMethod(alwaysRun = true)
