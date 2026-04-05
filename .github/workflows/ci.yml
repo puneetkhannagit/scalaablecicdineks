@@ -50,7 +50,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      # ✅ IMPORTANT: install Chrome (fix for CI)
       - name: Install Chrome
         run: |
           sudo apt-get update
@@ -58,13 +57,14 @@ jobs:
 
       - name: Run tests
         run: |
-          echo "Running tests for env=$ENV groups=$GROUPS service_name=${SERVICE_NAME}"
-          
+          echo "Running tests for env=$ENV groups=$GROUPS service_name=$SERVICE_NAME"
+
           mvn -B \
-            -Denv=$ENV \
-            -Dgroups=$GROUPS \
+            -Denv="$ENV" \
+            -Dgroups="$GROUPS" \
             -Dheadless=true \
-            -DrunMode=local \ -DserviceName=${SERVICE_NAME} \
+            -DrunMode=local \
+            -DserviceName="$SERVICE_NAME" \
             test
 
       - name: Upload test results
