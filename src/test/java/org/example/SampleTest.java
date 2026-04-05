@@ -5,7 +5,7 @@ import org.testng.annotations.Test;
 
 public class SampleTest extends TestBase {
 
-    @Test(groups = {"smoke"})
+    @Test(groups = {"release1"})
     public void openExampleDotCom() {
         getDriver().get("https://google.com");
         String title = getDriver().getTitle();
