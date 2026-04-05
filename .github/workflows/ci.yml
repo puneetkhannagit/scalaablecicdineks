@@ -18,6 +18,10 @@ on:
         description: 'Optional tag for this run (for reporting)'
         required: false
         default: ''
+      service_name:
+        description: 'Kubernetes service name '
+        required: true
+        default: 'svc'
 
 jobs:
   build-and-test:
@@ -26,6 +30,7 @@ jobs:
     env:
       ENV: ${{ github.event.inputs.env || 'local' }}
       GROUPS: ${{ github.event.inputs.groups || 'smoke' }}
+      SERVICE_NAME: ${{ github.event.inputs.service_name || 'svc' }}
 
     steps:
       - name: Checkout
@@ -53,13 +58,13 @@ jobs:
 
       - name: Run tests
         run: |
-          echo "Running tests for env=$ENV groups=$GROUPS"
+          echo "Running tests for env=$ENV groups=$GROUPS service_name=${SERVICE_NAME}"
           
           mvn -B \
             -Denv=$ENV \
             -Dgroups=$GROUPS \
             -Dheadless=true \
-            -DrunMode=local \
+            -DrunMode=local \ -DserviceName=${SERVICE_NAME} \
             test
 
       - name: Upload test results
