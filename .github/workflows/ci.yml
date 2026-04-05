@@ -18,10 +18,10 @@ on:
         description: 'Optional tag for this run (for reporting)'
         required: false
         default: ''
-      service_name:
-        description: 'Kubernetes service name '
-        required: true
-        default: 'svc'
+      externalUrl:
+        description: 'Optional external URL for the deployed backend (injected by deploy workflow)'
+        required: false
+        default: ''
 
 jobs:
   build-and-test:
@@ -30,7 +30,7 @@ jobs:
     env:
       ENV: ${{ github.event.inputs.env || 'local' }}
       GROUPS: ${{ github.event.inputs.groups || 'smoke' }}
-      SERVICE_NAME: ${{ github.event.inputs.service_name || 'svc' }}
+      EXTERNAL_URL: ${{ github.event.inputs.externalUrl || '' }}
 
     steps:
       - name: Checkout
@@ -50,6 +50,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
+      - name: Print external URL
+        run: |
+          echo "Running tests for env=$ENV groups=$GROUPS"
+          echo "External URL (passed from deploy): $EXTERNAL_URL"
+
       - name: Install Chrome
         run: |
           sudo apt-get update
@@ -57,14 +62,13 @@ jobs:
 
       - name: Run tests
         run: |
-          echo "Running tests for env=$ENV groups=$GROUPS service_name=$SERVICE_NAME"
-
+          echo "Running tests for env=$ENV groups=$GROUPS externalUrl=$EXTERNAL_URL"
           mvn -B \
-            -Denv="$ENV" \
-            -Dgroups="$GROUPS" \
+            -Denv=$ENV \
+            -Dgroups=$GROUPS \
             -Dheadless=true \
             -DrunMode=local \
-            -DserviceName="$SERVICE_NAME" \
+            -DexternalUrl="$EXTERNAL_URL" \
             test
 
       - name: Upload test results
